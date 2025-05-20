@@ -8,6 +8,7 @@ from util import *
 
 # data_file = "../macro/2025-04-08-full-seeding-30event/testout.root"
 data_file = "../macro/2025-05-05-pp-full-seeding-100event/testout.root"
+data_file = "./condorpptest10k.root"
 data = uproot.open(data_file)["T;1"]
 
 interactive_validation = False
@@ -44,7 +45,7 @@ if interactive_validation:
 
 # %%
 
-for ievent in range(30, 100):
+for ievent in range(10, 11):
     print (f"Processing event {ievent}...")
     clusters = get_clusters(data, ievent)
     print(f"clusters.shape: {clusters.shape}")

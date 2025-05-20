@@ -48,11 +48,10 @@ def get_particles(data, event_id, clusters, cid_to_index, pid_to_cids):
     vz = data["particle_vtx_z"].array(library="np")[event_id]
     df = pd.DataFrame({"ptid": ptid, "ppid": ppid, "pt": pt, "pz": pz, "vz": vz, "eta": eta, "cids": cids, "x": lists_of_x, "y": lists_of_y, "z": lists_of_z})
     # df = df[df['ptid'] > 0]
-    df = df[df['pt'] > 0.1]
-    # Filter particles by particle ID
-    charge_stable_ppids = [13, -13, 11, -11, 211, -211, 321, -321, 2212, -2212]
-    df = df[df['ppid'].isin(charge_stable_ppids)]
-    df = df[df['cids'].apply(len) > 30]
+    # df = df[df['pt'] > 0.1]
+    # charge_stable_ppids = [13, -13, 11, -11, 211, -211, 321, -321, 2212, -2212]
+    # df = df[df['ppid'].isin(charge_stable_ppids)]
+    # df = df[df['cids'].apply(len) > 30]
     return df
 
 # %%
@@ -103,7 +102,8 @@ def match_particles_to_seeds_optimized(particles, seeds, ncommon):
     for _, particle_row in particles.iterrows():
         particle_cids = set(particle_row['cids'])
         for sid, seed_set in seed_cid_sets:
-            if has_ncommon_or_more(particle_cids, seed_set, ncommon):
+            nmajor = 0.5*max(len(particle_cids), len(seed_set))
+            if has_ncommon_or_more(particle_cids, seed_set, nmajor):
                 matched_pts.append(particle_row['pt'])
                 break  # no need to check further seeds once matched
 
