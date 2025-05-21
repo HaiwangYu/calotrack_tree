@@ -17,7 +17,7 @@ unbinned_aris = [ [] for _ in range(len(dummy_pt_bin_edges) - 1)]
 bin_edges
 
 # Loop to read and process files from event_0 to event_10
-for ievent in range(0, 1000):
+for ievent in range(0, 1):
     print (f"Processing event {ievent}...")
     # fname = f'2025-05-13-pp-1k-cut/data_event_{ievent}.h5'
     fname = f'2025-05-20-pp-1k-nocut/data_event_{ievent}.h5'

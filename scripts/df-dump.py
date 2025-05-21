@@ -45,7 +45,7 @@ if interactive_validation:
 
 # %%
 
-for ievent in range(10, 11):
+for ievent in range(0, 1):
     print (f"Processing event {ievent}...")
     clusters = get_clusters(data, ievent)
     print(f"clusters.shape: {clusters.shape}")
