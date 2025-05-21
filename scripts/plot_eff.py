@@ -17,18 +17,19 @@ unbinned_aris = [ [] for _ in range(len(dummy_pt_bin_edges) - 1)]
 bin_edges
 
 # Loop to read and process files from event_0 to event_10
-for ievent in range(0, 1):
+for ievent in range(0, 100):
     print (f"Processing event {ievent}...")
     # fname = f'2025-05-13-pp-1k-cut/data_event_{ievent}.h5'
-    fname = f'2025-05-20-pp-1k-nocut/data_event_{ievent}.h5'
+    # fname = f'2025-05-20-pp-1k-nocut/data_event_{ievent}.h5'
+    fname = f'data_event_{ievent}.h5'
     with pd.HDFStore(fname, mode='r') as store:
         clusters = store['clusters']      # Saved as fixed format
         seeds = store['seeds']            # Saved as fixed format
         particles = store['particles']    # Saved as fixed format
 
-        print(f"Number of particles: {len(particles)}")
-        particles = particles[particles['cids'].apply(len) > 2]
-        print(f"|nclus| > 2: {len(particles)}")
+        # print(f"Number of particles: {len(particles)}")
+        # particles = particles[particles['cids'].apply(len) > 2]
+        # print(f"|nclus| > 2: {len(particles)}")
         # particles = particles[particles['eta'].apply(abs) < 1.1]
         # print(f"|eta| < 1.1: {len(particles)}")
         # particles = particles[particles['vz'].apply(abs) < 10]
@@ -59,9 +60,9 @@ for ievent in range(0, 1):
             # print(f"ievent {ievent}, bin {ibin}: ARI = {ari:.4f}")
         
         groupids_particle = get_group_ids(particles, clusters.shape[0], cid_to_index, cid_to_pt, dummy_pt_bin_edges)
-        print(f"groupids_particle {groupids_particle}")
         groupids_seed = get_group_ids(seeds, clusters.shape[0], cid_to_index, cid_to_pt, dummy_pt_bin_edges)
-        print(f"groupids_seed {groupids_seed}")
+        # print(f"groupids_particle {groupids_particle}")
+        # print(f"groupids_seed {groupids_seed}")
         for ibin in range(len(dummy_pt_bin_edges) - 1):
             ari = adjusted_rand_score(groupids_particle[ibin], groupids_seed[ibin])
             unbinned_aris[ibin].append(ari)
