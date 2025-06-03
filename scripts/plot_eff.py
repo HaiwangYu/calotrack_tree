@@ -11,27 +11,29 @@ total_matched_hist = np.zeros(len(bin_edges) - 1, dtype=int)
 total_all_hist = np.zeros(len(bin_edges) - 1, dtype=int)
 binned_aris = [ [] for _ in range(len(bin_edges) - 1)]
 
+integrated_pt_bins = np.array([0.5, 1.0, 1000.0])  # Example bin edges for pT
+integrated_pt_matched_hist = np.zeros(len(integrated_pt_bins) - 1, dtype=int)
+integrated_pt_all_hist = np.zeros(len(integrated_pt_bins) - 1, dtype=int)
+
 dummy_pt_bin_edges = np.linspace(0, 1000, 2)  # a dummy bin to include all particles
 unbinned_aris = [ [] for _ in range(len(dummy_pt_bin_edges) - 1)]
 
-bin_edges
-
 # Loop to read and process files from event_0 to event_10
-for ievent in range(0, 100):
+for ievent in range(0, 1000):
     print (f"Processing event {ievent}...")
     # fname = f'2025-05-13-pp-1k-cut/data_event_{ievent}.h5'
     # fname = f'2025-05-20-pp-1k-nocut/data_event_{ievent}.h5'
-    fname = f'data_event_{ievent}.h5'
+    fname = f'2025-05-20-pp-10k-mincut/data_event_{ievent}.h5'
     with pd.HDFStore(fname, mode='r') as store:
         clusters = store['clusters']      # Saved as fixed format
         seeds = store['seeds']            # Saved as fixed format
         particles = store['particles']    # Saved as fixed format
 
-        # print(f"Number of particles: {len(particles)}")
-        # particles = particles[particles['cids'].apply(len) > 2]
-        # print(f"|nclus| > 2: {len(particles)}")
-        # particles = particles[particles['eta'].apply(abs) < 1.1]
-        # print(f"|eta| < 1.1: {len(particles)}")
+        print(f"Number of particles: {len(particles)}")
+        particles = particles[particles['cids'].apply(len) > 5]
+        print(f"|nclus| > 20: {len(particles)}")
+        particles = particles[particles['eta'].apply(abs) < 1.1]
+        print(f"|eta| < 1.1: {len(particles)}")
         # particles = particles[particles['vz'].apply(abs) < 10]
         # print(f"|vz| < 10: {len(particles)}")
         # particles = particles[particles['ptid']>0]
@@ -46,6 +48,12 @@ for ievent in range(0, 100):
         total_matched_hist += matched_hist
         total_all_hist += all_hist
         print(f"Event {ievent}: All {len(all_pt)} matched: {len(matched_pt)}\n")
+
+        matched_hist, _ = np.histogram(matched_pt, bins=integrated_pt_bins)
+        all_hist, _ = np.histogram(all_pt, bins=integrated_pt_bins)
+        integrated_pt_matched_hist += matched_hist
+        integrated_pt_all_hist += all_hist
+        print(f"Event {ievent}: All {len(integrated_pt_all_hist)} matched: {len(integrated_pt_matched_hist)}\n")
 
         # Calculate ARI
         cid_to_index = {cid: index for index, cid in enumerate(clusters['cid'])}
@@ -70,6 +78,10 @@ for ievent in range(0, 100):
 
 print("Total Matched histogram:", total_matched_hist)
 print("Total All histogram:", total_all_hist)
+
+print("Integrated pT Matched histogram:", integrated_pt_matched_hist)
+print("Integrated pT All histogram:", integrated_pt_all_hist)
+
 # Calculate average ARI for each bin
 avg_aris = [np.mean(bin_aris) if bin_aris else 0 for bin_aris in binned_aris]
 std_aris = [np.std(bin_aris) if len(bin_aris) > 1 else 0 for bin_aris in binned_aris]
