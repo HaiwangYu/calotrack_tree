@@ -18,6 +18,10 @@
 
 #include <phool/PHCompositeNode.h>
 
+#include <g4detectors/PHG4TpcCylinderGeomContainer.h>
+#include <g4detectors/PHG4TpcCylinderGeom.h>
+#include <g4detectors/PHG4TpcCylinderGeomContainer.h>
+
 #include <g4main/PHG4Hit.h>
 #include <g4main/PHG4HitContainer.h>
 #include <g4main/PHG4HitDefs.h>
@@ -91,6 +95,7 @@
 
 #include <trackbase_historic/SvtxTrack.h>
 #include <trackbase_historic/SvtxTrackMap.h>
+#include <trackbase_historic/TrackAnalysisUtils.h>
 
 #include <g4eval/SvtxEvalStack.h>
 
@@ -197,6 +202,7 @@ int calotrkana::Init(PHCompositeNode *topNode)
   T->Branch("tpc_seeds_id", &m_tpc_seeds_id, "tpc_seeds_id[nTPCSeeds]/i");
   T->Branch("tpc_seeds_nclusters", &m_tpc_seeds_nclusters, "tpc_seeds_nclusters[nTPCSeeds]/i");
   T->Branch("tpc_seeds_start_idx", &m_tpc_seeds_start_idx, "tpc_seeds_start_idx[nTPCSeeds]/i");
+  T->Branch("tpc_seeds_dedx", &m_tpc_seeds_dedx, "tpc_seeds_dedx[nTPCSeeds]/F");
   T->Branch("tpc_seeds_clusters", &m_tpc_seeds_clusters, "tpc_seeds_clusters[nTPCSeedsClusters]/l");
 
   _pdg = new TDatabasePDG();
@@ -614,6 +620,7 @@ int calotrkana::process_event(PHCompositeNode *topNode)
 
         // uint8_t layer = TrkrDefs::getLayer(key);
         // std::cout<<"layer: "<<(int)layer<<std::endl;
+        // std::cout << "key: " << key << ", clustereval: " << clustereval << std::endl;
 
         std::set<PHG4Particle *> truth_withcluster = clustereval->all_truth_particles(key);
         // check if the set it empty
@@ -761,12 +768,31 @@ int calotrkana::process_event(PHCompositeNode *topNode)
     std::cout << "calotrkana::process_event(PHCompositeNode *topNode) No SvtxTrackMap found" << std::endl;
     return Fun4AllReturnCodes::ABORTEVENT;
   }
+  auto *tpcGeo = findNode::getClass<PHG4TpcCylinderGeomContainer>(topNode, "CYLINDERCELLGEOM_SVTX");
+  if (!tpcGeo)
+  {
+    std::cout << "calotrkana::process_event(PHCompositeNode *topNode) No TPC geometry found" << std::endl;
+    return Fun4AllReturnCodes::ABORTEVENT;
+  }
+  float layerThicknesses[4] = {0.0, 0.0, 0.0, 0.0};
+  // These are randomly chosen layer thicknesses for the TPC, to get the
+  // correct region thicknesses in an easy to pass way to the helper fxn
+  layerThicknesses[0] = tpcGeo->GetLayerCellGeom(7)->get_thickness();
+  layerThicknesses[1] = tpcGeo->GetLayerCellGeom(8)->get_thickness();
+  layerThicknesses[2] = tpcGeo->GetLayerCellGeom(27)->get_thickness();
+  layerThicknesses[3] = tpcGeo->GetLayerCellGeom(50)->get_thickness();
   for (const auto &[key, track] : *trackmap)
   {
     if (!track)
     {
       continue;
     }
+    auto tpcseed = track->get_tpc_seed();
+    if (!tpcseed)
+    {
+      continue;
+    }
+    m_tpc_seeds_dedx[m_nTPCSeeds] = TrackAnalysisUtils::calc_dedx(tpcseed, clustermap, m_tGeometry, layerThicknesses);
     int seed_ntpc_clusters = 0;
 
     for (const auto &ckey : get_cluster_keys(track))
