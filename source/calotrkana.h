@@ -157,7 +157,7 @@ private:
   unsigned int m_tpc_seeds_start_idx[tpcseedmaxlength] = {0};
   float m_tpc_seeds_dedx[tpcseedmaxlength] = {0};
   int m_tpc_seeds_maxparticle_pid[tpcseedmaxlength] = {0};
-  float m_tpc_seeds_maxparticle_e[tpcseedmaxlength] = {0};
+  float m_tpc_seeds_maxparticle_p[tpcseedmaxlength] = {0};
   ULong64_t m_tpc_seeds_clusters[tpcseedclustermaxlength] = {0};
 
 

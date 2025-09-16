@@ -204,7 +204,7 @@ int calotrkana::Init(PHCompositeNode *topNode)
   T->Branch("tpc_seeds_start_idx", &m_tpc_seeds_start_idx, "tpc_seeds_start_idx[nTPCSeeds]/i");
   T->Branch("tpc_seeds_dedx", &m_tpc_seeds_dedx, "tpc_seeds_dedx[nTPCSeeds]/F");
   T->Branch("tpc_seeds_maxparticle_pid", &m_tpc_seeds_maxparticle_pid, "tpc_seeds_maxparticle_pid[nTPCSeeds]/I");
-  T->Branch("tpc_seeds_maxparticle_e", &m_tpc_seeds_maxparticle_e, "tpc_seeds_maxparticle_e[nTPCSeeds]/F");
+  T->Branch("tpc_seeds_maxparticle_p", &m_tpc_seeds_maxparticle_p, "tpc_seeds_maxparticle_p[nTPCSeeds]/F");
   T->Branch("tpc_seeds_clusters", &m_tpc_seeds_clusters, "tpc_seeds_clusters[nTPCSeedsClusters]/l");
 
   _pdg = new TDatabasePDG();
@@ -808,7 +808,7 @@ int calotrkana::process_event(PHCompositeNode *topNode)
     m_tpc_seeds_dedx[m_nTPCSeeds] = TrackAnalysisUtils::calc_dedx(tpcseed, clustermap, m_tGeometry, layerThicknesses);
     PHG4Particle* particle = trackeval->max_truth_particle_by_nclusters(track);
     m_tpc_seeds_maxparticle_pid[m_nTPCSeeds] = particle ? particle->get_pid() : 0;
-    m_tpc_seeds_maxparticle_e[m_nTPCSeeds] = particle ? particle->get_e() : -1;
+    m_tpc_seeds_maxparticle_p[m_nTPCSeeds] = particle ? sqrt(particle->get_px()*particle->get_px() + particle->get_py()*particle->get_py() + particle->get_pz()*particle->get_pz()) : -1;
 
     int seed_ntpc_clusters = 0;
 
