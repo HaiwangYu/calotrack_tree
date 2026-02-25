@@ -86,9 +86,68 @@ Optional:
 - Minimal logging (print progress every N chunks).
 
 
-```bash
-python point_to_track.py \
---input /sphenix/tg/tg01/commissioning/CaloCalibWG/sli/fm4npp_eval/d9_m5_k30_p20_eval_merged_d70000_1_seed1_per_point_data.csv \
---output /sphenix/user/hwyu/calotrack_tree/macro/dedx-fm/seed1_per_track.csv
+# Task: figure out the pid_class to actual PID mapping
 
-```
+# Input:
+CSV file with at least these columes: `pid_pid_target`, `pid_true_class`
+
+# Process:
+- Figure out a "class" to "abs(pid)" mapping
+- Note: PID can be possitve or negative, but class -> abs(pid) mapping should be 1-to-1
+- Assume all the class -> abs(pid) maping is the same, so once one case was found and the mapping filled, skip this case in the future
+- Class can be [0, 4], quit program after all the mappings are figured 
+
+# Output:
+A int to int dictionary print out that can be pasted to a python script
+
+
+# Task: Infer pid_true_class → |pid_pid_target| mapping (1-to-1)
+
+Write a Python 3 script that scans a CSV file and infers a one-to-one mapping from PID class IDs to the absolute value of the true PID.
+
+## Input
+- CSV file containing at least these columns:
+  - pid_pid_target   (integer PID; may be positive or negative)
+  - pid_true_class   (integer class label; expected values in [0, 4])
+
+## Objective
+Build a mapping:
+  pid_true_class (0–4)  ->  abs(pid_pid_target)
+with a strict 1-to-1 constraint:
+- each class maps to exactly one |pid|
+- no two classes map to the same |pid|
+
+## Assumption (for efficiency)
+The class→|pid| relationship is globally consistent across the dataset. Therefore:
+- once a mapping for a class is discovered, future rows with that class can be skipped.
+
+## Processing Logic (streaming / early exit)
+Process the CSV in chunks (pandas read_csv with chunksize) and for each valid row:
+1) c = int(pid_true_class)
+2) p = abs(int(pid_pid_target))
+
+Rules:
+- Skip rows with missing/NaN values in either column.
+- If c not in [0,4], skip (optionally warn once).
+- If c already in mapping: skip this row.
+- Else if p is already used by a different class: treat as conflict:
+  - print a clear error showing (class c, abs(pid) p, existing mapping)
+  - exit with non-zero status.
+- Else:
+  - mapping[c] = p
+  - mark p as used
+  - print/log the newly discovered mapping.
+
+Stop immediately once mappings for all classes {0,1,2,3,4} are found.
+
+## Output
+Print a Python-pastable int→int dictionary, e.g.:
+{0: 211, 1: 321, 2: 2212, 3: 11, 4: 13}
+
+Also print it sorted by key for reproducibility.
+
+## CLI
+python infer_pid_mapping.py --input /path/to/file.csv
+Optional:
+  --chunksize 1000000
+  --quiet
